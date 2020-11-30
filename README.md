@@ -115,18 +115,16 @@ The example commons we're using is an open Canine Data Commons.
 from gen3.index import Gen3Index
 from gen3.auth import Gen3Auth
 
-# Gen3 Commons URL
-COMMONS = "https://caninedc.org/"
 
 # An API Key downloaded from the above commons' "Profile" page
 API_KEY_FILEPATH = "credentials.json"
 
 
 def main():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    index = Gen3Index(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    index = Gen3Index(auth.endpoint, auth_provider=auth)
     if not index.is_healthy():
-        print(f"uh oh! The indexing service is not healthy in the commons {COMMONS}")
+        print(f"uh oh! The indexing service is not healthy in the commons {auth.endpoint}")
         exit()
 
     print("trying to create new indexed file object record:\n")
@@ -181,9 +179,6 @@ from gen3.index import Gen3Index
 from gen3.auth import Gen3Auth
 from gen3.jobs import Gen3Jobs, DBGAP_METADATA_JOB, INGEST_METADATA_JOB
 
-# Gen3 Commons URL
-COMMONS = "https://example.org/"
-
 # An API Key downloaded from the above commons' "Profile" page
 API_KEY_FILEPATH = "credentials.json"
 
@@ -192,8 +187,8 @@ logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
 def metadata_ingest():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     job_input = {
         "URL": "https://cdistest-public-test-bucket.s3.amazonaws.com/04_28_20_21_55_13_merged_metadata_manifest.tsv",
@@ -210,8 +205,8 @@ def metadata_ingest():
 
 
 def main():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     job_input = {
         "phsid_list": "phs000920 phs000921 phs000946 phs000951 phs000954 phs000956 phs000964 phs000972 phs000974 phs000988 phs000993 phs000997 phs001024 phs001032 phs001040 phs001062 phs001143 phs001189 phs001207 phs001211 phs001215 phs001217 phs001218 phs001237 phs001293 phs001345 phs001359 phs001368 phs001387 phs001402 phs001412 phs001416",
@@ -246,9 +241,6 @@ import asyncio
 from gen3.auth import Gen3Auth
 from gen3.jobs import Gen3Jobs, DBGAP_METADATA_JOB
 
-# Gen3 Commons URL
-COMMONS = "https://example.net/"
-
 # An API Key downloaded from the above commons' "Profile" page
 API_KEY_FILEPATH = "credentials.json"
 
@@ -269,8 +261,8 @@ JOB_INPUT = {
 
 
 def example_async_run_job():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -281,8 +273,8 @@ def example_async_run_job():
     print(job_output)
 
 def example_non_async_run_job():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     is_healthy = jobs.is_healthy()
     print(is_healthy)
@@ -321,11 +313,9 @@ from gen3.metadata import Gen3Metadata
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-COMMONS = "https://{{insert-commons-here}}/"
-
 def main():
-    auth = Gen3Auth(COMMONS, refresh_file="credentials.json")
-    mds = Gen3Metadata(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file="credentials.json")
+    mds = Gen3Metadata(auth_provider=auth)
 
     if mds.is_healthy():
         print(mds.get_version())
@@ -528,18 +518,17 @@ from gen3.tools.indexing import index_object_manifest
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-COMMONS = "https://{{insert-commons-here}}/"
 MANIFEST = "./example_manifest.tsv"
 
 
 def main():
-    auth = Gen3Auth(COMMONS, refresh_file="credentials.json")
+    auth = Gen3Auth(refresh_file="credentials.json")
 
     # use basic auth for admin privileges in indexd
     # auth = ("basic_auth_username", "basic_auth_password")
 
     index_object_manifest(
-        commons_url=COMMONS,
+        commons_url=auth.endpoint,
         manifest_file=MANIFEST,
         thread_num=8,
         auth=auth,
@@ -726,8 +715,6 @@ from gen3.tools.metadata.ingest_manifest import manifest_row_parsers
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-COMMONS = "https://{{insert-commons-here}}/"
-
 # a file containing a "guid" column and additional, arbitrary columns to populate
 # into the metadata service
 MANIFEST = "dbgap_extract_guid.tsv"
@@ -736,7 +723,7 @@ def main():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    auth = Gen3Auth(COMMONS, refresh_file="credentials.json")
+    auth = Gen3Auth(refresh_file="credentials.json")
 
     # must provide a str to namespace the metadata from the file in a block in
     # the metadata service
@@ -763,7 +750,7 @@ def main():
 
     loop.run_until_complete(
         metadata.async_ingest_metadata_manifest(
-            COMMONS, manifest_file=MANIFEST, metadata_source=metadata_source, auth=auth
+            auth.endpoint, manifest_file=MANIFEST, metadata_source=metadata_source, auth=auth
         )
     )
 
@@ -842,7 +829,6 @@ from gen3.tools.metadata.ingest_manifest import manifest_row_parsers
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-COMMONS = "https://{{insert-commons-here}}/"
 MANIFEST = "dbgap_extract.tsv"
 
 
@@ -850,7 +836,7 @@ def main():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    auth = Gen3Auth(COMMONS, refresh_file="credentials.json")
+    auth = Gen3Auth(refresh_file="credentials.json")
 
     # must provide a str to namespace the metadata from the file in a block in
     # the metadata service
@@ -913,7 +899,7 @@ def main():
         # get_guid_from_file=False tells tool to try and get the guid using
         # the provided custom query function
         metadata.async_ingest_metadata_manifest(
-            COMMONS,
+            auth.endpoint,
             manifest_file=MANIFEST,
             metadata_source=metadata_source,
             auth=auth,
@@ -978,8 +964,6 @@ from gen3.tools.merge import manifests_mapping_config
 
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-
-COMMONS = "https://{{insert-commons-here}}/"
 
 def main():
     indexing_manifest = (
@@ -1059,8 +1043,6 @@ from gen3.tools.merge import (
 logging.basicConfig(filename="output.log", level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-COMMONS = "https://{{insert-commons-here}}/"
-
 
 def main():
     indexing_manifest = (
@@ -1129,9 +1111,6 @@ from gen3.index import Gen3Index
 from gen3.auth import Gen3Auth
 from gen3.jobs import Gen3Jobs, DBGAP_METADATA_JOB, INGEST_METADATA_JOB
 
-# Gen3 Commons URL
-COMMONS = "https://example.net/"
-
 # An API Key downloaded from the above commons' "Profile" page
 API_KEY_FILEPATH = "credentials.json"
 
@@ -1139,8 +1118,8 @@ logging.basicConfig(filename="output.log", level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 def get_dbgap_merged_metadata_manifest():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     # this configuration tells the job to pull sample information from the public dbgap
     # api for the list of dbgap phsids (AKA study accession numbers) provided.
@@ -1175,8 +1154,8 @@ def get_dbgap_merged_metadata_manifest():
 
 
 def metadata_ingest():
-    auth = Gen3Auth(COMMONS, refresh_file=API_KEY_FILEPATH)
-    jobs = Gen3Jobs(COMMONS, auth_provider=auth)
+    auth = Gen3Auth(refresh_file=API_KEY_FILEPATH)
+    jobs = Gen3Jobs(auth_provider=auth)
 
     # provide a URL for a manifest that contains a GUID column along with arbitrary
     # other columns to add to the metadata service. The "metadata_source" namespaces
