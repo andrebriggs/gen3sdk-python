@@ -11,8 +11,12 @@ import gen3.auth as auth_tool
 @click.option("--data", 'data', help="json data to post - read from file if starts with @")
 @click.argument("path")
 @click.pass_context
-def curl(ctx, request, data, path):
+def curl(ctx, request=None, data=None, path):
     """Get an access token suitable to pass as an Authorization header bearer"""
+    if not request:
+        request = "GET"
+        if data:
+            request = "POST"
     auth_provider = ctx.obj["auth_factory"].get()
     output = requests.get(auth_provider.endpoint + "/" + path, auth=auth_provider)
     print(json.dumps(output.json(), indent=2))
