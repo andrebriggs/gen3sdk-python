@@ -3,6 +3,7 @@ import json
 from requests.auth import AuthBase
 import os
 import requests
+import time
 from urllib.parse import urlparse
 
 
@@ -112,6 +113,7 @@ class Gen3Auth(AuthBase):
         #  gen3 api key with a token as the "api_key" property
         self._refresh_token = refresh_token
         self._access_token = None
+        self._access_token_info = None
         self._wts_idp = idp
         self._wts_namespace = os.environ.get("NAMESPACE", "default")    
         self._use_wts = False
@@ -139,6 +141,7 @@ class Gen3Auth(AuthBase):
             # most production environments are in the "default" namespace
             # attempt to get a token from the workspace-token-service
             self._access_token = get_access_token_from_wts(self._wts_namespace, self._wts_idp)
+            self._access_token_info = decode_token(self._access_token)
             self._use_wts = True
         elif refresh_file:
             try:
@@ -191,7 +194,6 @@ class Gen3Auth(AuthBase):
         # copy the request to resend
         newreq = response.request.copy()
 
-        self._access_token = None
         newreq.headers["Authorization"] = self._get_auth_value()
 
         _response = response.connection.send(newreq, **kwargs)
@@ -200,13 +202,21 @@ class Gen3Auth(AuthBase):
 
         return _response
 
+    def refresh_access_token(self):
+        """ Get a new access token """
+        if self._use_wts:
+            self._access_token = get_access_token_from_wts(self._wts_namespace, self._wts_idp)
+        else:
+            self._access_token = get_access_token_with_key(self._refresh_token)
+        self._access_token_info = decode_token(self._access_token)
+        return self._access_token
+
     def get_access_token(self):
-        # TODO - add cache and expiration check
-        if not self._access_token:
-            if self._use_wts:
-                self._access_token = get_access_token_from_wts(self._wts_namespace, self._wts_idp)
-            else:
-                self._access_token = get_access_token_with_key(self._refresh_token)
+        """ Get the access token - auto refresh if within 5 minutes of expiration """
+        need_new_token = not self._access_token or not self._access_token_info or time.time() + 300 > self._access_token_info["exp"]
+        if need_new_token:
+            return self.refresh_access_token()
+        # use cache
         return self._access_token
         
     def _get_auth_value(self):
@@ -218,4 +228,25 @@ class Gen3Auth(AuthBase):
         """
         return "bearer " + self.get_access_token()
     
-    
+    def curl(self, path, request=None, data=None):
+        """Get an access token suitable to pass as an Authorization header bearer"""
+        if not request:
+            request = "GET"
+            if data:
+                request = "POST"
+        json_data = data
+        output = None
+        if data and data[0] == "@":
+            with open(data[1:]) as f:
+                json_data = f.read()
+        if request == "GET":
+            output = requests.get(self.endpoint + "/" + path, auth=self)
+        elif request == "POST":
+            output = requests.post(self.endpoint + "/" + path, json=json_data, auth=self)
+        elif request == "PUT":
+            output = requests.put(self.endpoint + "/" + path, json=json_data, auth=self)
+        elif request == "DELETE":
+            output = requests.delete(self.endpoint + "/" + path, auth=self)
+        else:
+            raise Exception("Invalid request type: " + request)
+        return output

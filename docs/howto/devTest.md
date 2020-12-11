@@ -6,9 +6,12 @@
 Local development like this:
 
 ```
-pipenv shell
-pipenv install --dev
-pipenv install -r test-requirements.txt
+poetry shell
+poetry install -vv
 pytest
 ```
 
+CLI:
+```
+python -m gen3.cli
+```

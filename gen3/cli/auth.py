@@ -5,22 +5,22 @@ import requests
 import sys
 import gen3.auth as auth_tool
 
+def stderr(*str):
+    print(*str, sys.stderr)
 
 @click.command()
 @click.option("--request", 'request', help="HTTP Method - GET, PUT, POST, DELETE")
 @click.option("--data", 'data', help="json data to post - read from file if starts with @")
 @click.argument("path")
 @click.pass_context
-def curl(ctx, request=None, data=None, path):
+def curl(ctx, path, request=None, data=None):
     """Get an access token suitable to pass as an Authorization header bearer"""
-    if not request:
-        request = "GET"
-        if data:
-            request = "POST"
     auth_provider = ctx.obj["auth_factory"].get()
-    output = requests.get(auth_provider.endpoint + "/" + path, auth=auth_provider)
-    print(json.dumps(output.json(), indent=2))
-
+    output = auth_provider.curl(path, request, data)
+    print(output.text)
+    if output.status_code < 200 or output.status_code > 299:
+        stderr("err status code %i" % output.status_code)
+        sys.exit(1)
 
 @click.command()
 @click.pass_context
@@ -55,6 +55,12 @@ def wts_endpoint():
 def wts_list():
     """list the idp's available from the wts in a Gen3 workspace environment """
     print(json.dumps(auth_tool.get_wts_idps(), indent=2))
+
+@click.command()
+@click.pass_context
+def info(ctx):
+    """Info about the current authentication mechanism"""
+    print(ctx.obj["auth_factory"].get().get_access_token())
 
 @click.group()
 def auth():
