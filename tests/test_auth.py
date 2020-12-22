@@ -56,12 +56,12 @@ def test_auth_init_in_workspace(monkeypatch):
         # unable to communicate with the WTS
         mock_request.get().status_code = 403
         with pytest.raises(gen3.auth.Gen3AuthError):
-            gen3.auth.Gen3Auth()
+            gen3.auth.Gen3Auth(idp="local")
 
     with patch("gen3.auth.requests.get") as mock_request:
         # can communicate with the WTS
         mock_request.side_effect = _mock_request
-        auth = gen3.auth.Gen3Auth()
+        auth = gen3.auth.Gen3Auth(idp="local")
         assert auth._use_wts == True
         assert auth.endpoint == test_endpoint
         assert auth._access_token == access_token

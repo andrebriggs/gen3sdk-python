@@ -8,7 +8,7 @@ import sys
 import indexclient.client as client
 
 from gen3.utils import DEFAULT_BACKOFF_SETTINGS
-
+from gen3.auth import Gen3Auth
 
 class Gen3Index:
     """
@@ -16,7 +16,7 @@ class Gen3Index:
     A class for interacting with the Gen3 Index services.
 
     Args:
-        auth_provider (Gen3Auth): A Gen3Auth class instance.
+        auth_provider (Gen3Auth): A Gen3Auth class instance or indexd basic creds tuple
 
     Examples:
         This generates the Gen3Index class pointed at the sandbox commons while
@@ -28,7 +28,7 @@ class Gen3Index:
     """
 
     def __init__(self, endpoint=None, auth_provider=None, service_location="index"):
-        if auth_provider:
+        if auth_provider and isinstance(auth_provider,Gen3Auth):
             endpoint = auth_provider.endpoint
         endpoint = endpoint.strip("/")
         # if running locally, indexd is deployed by itself without a location relative

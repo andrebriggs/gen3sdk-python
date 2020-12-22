@@ -10,8 +10,7 @@ from gen3.auth import Gen3CurlError, check_curl_status
 
 
 def wsurl_to_tokens(ws_urlstr):
-    """
-    Tokenize ws:/// paths - so ws:///@user/bla/foo returns ("@user", "bla/foo")
+    """Tokenize ws:/// paths - so ws:///@user/bla/foo returns ("@user", "bla/foo")
     """
     urlparts = urlparse(ws_urlstr)
     if urlparts.scheme != "ws":
@@ -23,6 +22,7 @@ def wsurl_to_tokens(ws_urlstr):
 
 @backoff.on_exception(backoff.expo, Gen3CurlError, **DEFAULT_BACKOFF_SETTINGS)
 def get_url(urlstr, dest_path):
+    """Simple url fetch to dest_path with backoff"""
     res = requests.get(urlstr)
     check_curl_status(res)
     if dest_path == "-":
@@ -33,6 +33,7 @@ def get_url(urlstr, dest_path):
 
 @backoff.on_exception(backoff.expo, Gen3CurlError, **DEFAULT_BACKOFF_SETTINGS)
 def put_url(urlstr, src_path):
+    """Simple put src_path to url with backoff"""
     with open(src_path, 'rb') as f:
         res = requests.put(urlstr, data=f)
     check_curl_status(res)
@@ -44,8 +45,7 @@ def trim_leading_slash(str):
         
 
 class Gen3WsStorage:
-    """
-    A class for interacting with the Gen3 workspace storage service.
+    """A class for interacting with the Gen3 workspace storage service.
 
     Examples:
         This generates the Gen3WsStorage class pointed at the sandbox commons while
@@ -53,7 +53,6 @@ class Gen3WsStorage:
 
         >>> auth = Gen3Auth(endpoint, refresh_file="credentials.json")
         ... sub = Gen3Metadata(auth.endpoint, auth)
-
     """
 
     def __init__(
