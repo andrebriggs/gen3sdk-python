@@ -42,9 +42,8 @@ class Gen3Submission:
 
     def __export_file(self, filename, output):
         """Writes an API response to a file."""
-        outfile = open(filename, "w")
-        outfile.write(output)
-        outfile.close
+        with open(filename, "w") as outfile:
+            outfile.write(output)
         print("\nOutput written to file: " + filename)
 
     ### Program functions

@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import json
 from requests.auth import AuthBase
 import os
@@ -94,6 +95,17 @@ def check_curl_status(res):
         raise Gen3CurlStatusError("Got status: " + str(res.status_code))
 
 
+def token_cache_file(key):
+    """Compute the path to the access-token cache file"""
+    cache_folder = "{}/.cache/gen3/".format(os.path.expanduser("~"))
+    if not os.path.isdir(cache_folder):
+        os.makedirs(cache_folder)
+    
+    cache_prefix = cache_folder + "token_cache_"
+    m = hashlib.md5()
+    m.update(key.encode("utf-8"))
+    return cache_prefix + m.hexdigest()
+
 class Gen3Auth(AuthBase):
     """Gen3 auth helper class for use with requests auth.
 
@@ -140,7 +152,7 @@ class Gen3Auth(AuthBase):
         self._refresh_token = refresh_token
         self._access_token = None
         self._access_token_info = None
-        self._wts_idp = idp
+        self._wts_idp = idp or "local"
         self._wts_namespace = os.environ.get("NAMESPACE", "default")    
         self._use_wts = False
 
@@ -169,9 +181,9 @@ class Gen3Auth(AuthBase):
             # check if this is a Gen3 workspace environment
             # most production environments are in the "default" namespace
             # attempt to get a token from the workspace-token-service
-            self._access_token = get_access_token_from_wts(self._wts_namespace, self._wts_idp)
-            self._access_token_info = decode_token(self._access_token)
             self._use_wts = True
+            # hate calling a method from the constructor, but avoids copying code
+            self.get_access_token()
         elif refresh_file:
             try:
                 with open(refresh_file) as f:
@@ -238,10 +250,23 @@ class Gen3Auth(AuthBase):
         else:
             self._access_token = get_access_token_with_key(self._refresh_token)
         self._access_token_info = decode_token(self._access_token)
+        cache_file = token_cache_file(self._refresh_token["api_key"] or self._wts_idp)
+        with open(cache_file, "w") as f:
+            f.write(self._access_token)
         return self._access_token
 
     def get_access_token(self):
         """ Get the access token - auto refresh if within 5 minutes of expiration """
+        if not self._access_token:
+            cache_file = token_cache_file(self._refresh_token["api_key"] or self._wts_idp)
+            if os.path.isfile(cache_file):
+                try: # don't freak out on invalid cache
+                    with open(cache_file) as f:
+                        self._access_token = f.read()
+                        self._access_token_info = decode_token(self._access_token)
+                except:
+                    self._access_token = None
+                    self._access_token_info = None
         need_new_token = not self._access_token or not self._access_token_info or time.time() + 300 > self._access_token_info["exp"]
         if need_new_token:
             return self.refresh_access_token()
@@ -256,7 +281,8 @@ class Gen3Auth(AuthBase):
 
         """
         return "bearer " + self.get_access_token()
-    
+
+
     def curl(self, path, request=None, data=None):
         """Get an access token suitable to pass as an Authorization header bearer"""
         try:
