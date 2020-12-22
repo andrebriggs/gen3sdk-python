@@ -1,6 +1,6 @@
-Gen3 Workspace Storage Class
-----------------
+Gen3 Workspace Storage
+-----------------------
 
-.. autoclass:: gen3.jobs.Gen3WsStorage
+.. autoclass:: gen3.wss.Gen3WsStorage
    :members:
    :show-inheritance:

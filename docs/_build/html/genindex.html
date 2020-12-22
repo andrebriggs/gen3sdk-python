@@ -1,41 +1,33 @@
 
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; Gen3 SDK  documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
 
@@ -53,6 +45,7 @@
  | <a href="#M"><strong>M</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
@@ -113,6 +106,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tools/metadata.html#gen3.tools.metadata.ingest_manifest.COLUMN_TO_USE_AS_GUID">COLUMN_TO_USE_AS_GUID (in module gen3.tools.metadata.ingest_manifest)</a>
 </li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.copy">copy() (gen3.wss.Gen3WsStorage method)</a>
+</li>
       <li><a href="metadata.html#gen3.metadata.Gen3Metadata.create">create() (gen3.metadata.Gen3Metadata method)</a>
 </li>
       <li><a href="indexing.html#gen3.index.Gen3Index.create_blank">create_blank() (gen3.index.Gen3Index method)</a>
@@ -130,6 +125,8 @@
       <li><a href="submission.html#gen3.submission.Gen3Submission.create_project">create_project() (gen3.submission.Gen3Submission method)</a>
 </li>
       <li><a href="indexing.html#gen3.index.Gen3Index.create_record">create_record() (gen3.index.Gen3Index method)</a>
+</li>
+      <li><a href="auth.html#gen3.auth.Gen3Auth.curl">curl() (gen3.auth.Gen3Auth method)</a>
 </li>
       <li><a href="tools/indexing.html#gen3.tools.indexing.download_manifest.CURRENT_DIR">CURRENT_DIR (in module gen3.tools.indexing.download_manifest)</a>
 
@@ -153,10 +150,10 @@
 </li>
       <li><a href="submission.html#gen3.submission.Gen3Submission.delete_nodes">delete_nodes() (gen3.submission.Gen3Submission method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="submission.html#gen3.submission.Gen3Submission.delete_program">delete_program() (gen3.submission.Gen3Submission method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="submission.html#gen3.submission.Gen3Submission.delete_project">delete_project() (gen3.submission.Gen3Submission method)</a>
 </li>
       <li><a href="indexing.html#gen3.index.Gen3Index.delete_record">delete_record() (gen3.index.Gen3Index method)</a>
@@ -166,6 +163,10 @@
 </li>
       </ul></li>
       <li><a href="submission.html#gen3.submission.Gen3Submission.delete_records">delete_records() (gen3.submission.Gen3Submission method)</a>
+</li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.download">download() (gen3.wss.Gen3WsStorage method)</a>
+</li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.download_url">download_url() (gen3.wss.Gen3WsStorage method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -187,16 +188,41 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="tools.html#module-gen3.tools">gen3.tools (module)</a>
+      <li>
+    gen3.tools
+
+      <ul>
+        <li><a href="tools.html#module-gen3.tools">module</a>
 </li>
-      <li><a href="tools/indexing.html#module-gen3.tools.indexing.download_manifest">gen3.tools.indexing.download_manifest (module)</a>
+      </ul></li>
+      <li>
+    gen3.tools.indexing.download_manifest
+
+      <ul>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.download_manifest">module</a>
 </li>
-      <li><a href="tools/indexing.html#module-gen3.tools.indexing.index_manifest">gen3.tools.indexing.index_manifest (module)</a>
+      </ul></li>
+      <li>
+    gen3.tools.indexing.index_manifest
+
+      <ul>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.index_manifest">module</a>
 </li>
-      <li><a href="tools/indexing.html#module-gen3.tools.indexing.verify_manifest">gen3.tools.indexing.verify_manifest (module)</a>
+      </ul></li>
+      <li>
+    gen3.tools.indexing.verify_manifest
+
+      <ul>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.verify_manifest">module</a>
 </li>
-      <li><a href="tools/metadata.html#module-gen3.tools.metadata.ingest_manifest">gen3.tools.metadata.ingest_manifest (module)</a>
+      </ul></li>
+      <li>
+    gen3.tools.metadata.ingest_manifest
+
+      <ul>
+        <li><a href="tools/metadata.html#module-gen3.tools.metadata.ingest_manifest">module</a>
 </li>
+      </ul></li>
       <li><a href="auth.html#gen3.auth.Gen3Auth">Gen3Auth (class in gen3.auth)</a>
 </li>
       <li><a href="file.html#gen3.file.Gen3File">Gen3File (class in gen3.file)</a>
@@ -209,12 +235,16 @@
 </li>
       <li><a href="submission.html#gen3.submission.Gen3Submission">Gen3Submission (class in gen3.submission)</a>
 </li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage">Gen3WsStorage (class in gen3.wss)</a>
+</li>
       <li><a href="indexing.html#gen3.index.Gen3Index.get">get() (gen3.index.Gen3Index method)</a>
 
       <ul>
         <li><a href="metadata.html#gen3.metadata.Gen3Metadata.get">(gen3.metadata.Gen3Metadata method)</a>
 </li>
       </ul></li>
+      <li><a href="auth.html#gen3.auth.Gen3Auth.get_access_token">get_access_token() (gen3.auth.Gen3Auth method)</a>
+</li>
       <li><a href="indexing.html#gen3.index.Gen3Index.get_all_records">get_all_records() (gen3.index.Gen3Index method)</a>
 </li>
       <li><a href="tools/indexing.html#gen3.tools.indexing.index_manifest.get_and_verify_fileinfos_from_manifest">get_and_verify_fileinfos_from_manifest() (in module gen3.tools.indexing.index_manifest)</a>
@@ -223,6 +253,8 @@
 </li>
       <li><a href="submission.html#gen3.submission.Gen3Submission.get_dictionary_all">get_dictionary_all() (gen3.submission.Gen3Submission method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="submission.html#gen3.submission.Gen3Submission.get_dictionary_node">get_dictionary_node() (gen3.submission.Gen3Submission method)</a>
 </li>
       <li><a href="submission.html#gen3.submission.Gen3Submission.get_graphql_schema">get_graphql_schema() (gen3.submission.Gen3Submission method)</a>
@@ -231,8 +263,6 @@
 </li>
       <li><a href="indexing.html#gen3.index.Gen3Index.get_latest_version">get_latest_version() (gen3.index.Gen3Index method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="jobs.html#gen3.jobs.Gen3Jobs.get_output">get_output() (gen3.jobs.Gen3Jobs method)</a>
 </li>
       <li><a href="file.html#gen3.file.Gen3File.get_presigned_url">get_presigned_url() (gen3.file.Gen3File method)</a>
@@ -306,6 +336,12 @@
       <li><a href="jobs.html#gen3.jobs.Gen3Jobs.list_jobs">list_jobs() (gen3.jobs.Gen3Jobs method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.ls">ls() (gen3.wss.Gen3WsStorage method)</a>
+</li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.ls_path">ls_path() (gen3.wss.Gen3WsStorage method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
@@ -319,10 +355,23 @@
         <li><a href="tools/metadata.html#gen3.tools.metadata.ingest_manifest.MAX_CONCURRENT_REQUESTS">(in module gen3.tools.metadata.ingest_manifest)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tools/indexing.html#gen3.tools.indexing.index_manifest.MD5">MD5 (in module gen3.tools.indexing.index_manifest)</a>
 </li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="tools.html#module-gen3.tools">gen3.tools</a>
+</li>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.download_manifest">gen3.tools.indexing.download_manifest</a>
+</li>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.index_manifest">gen3.tools.indexing.index_manifest</a>
+</li>
+        <li><a href="tools/indexing.html#module-gen3.tools.indexing.verify_manifest">gen3.tools.indexing.verify_manifest</a>
+</li>
+        <li><a href="tools/metadata.html#module-gen3.tools.metadata.ingest_manifest">gen3.tools.metadata.ingest_manifest</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -346,6 +395,20 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="indexing.html#gen3.index.Gen3Index.query_urls">query_urls() (gen3.index.Gen3Index method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="auth.html#gen3.auth.Gen3Auth.refresh_access_token">refresh_access_token() (gen3.auth.Gen3Auth method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.rm">rm() (gen3.wss.Gen3WsStorage method)</a>
+</li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.rm_path">rm_path() (gen3.wss.Gen3WsStorage method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -383,9 +446,13 @@
 </li>
       <li><a href="indexing.html#gen3.index.Gen3Index.update_blank">update_blank() (gen3.index.Gen3Index method)</a>
 </li>
+      <li><a href="indexing.html#gen3.index.Gen3Index.update_record">update_record() (gen3.index.Gen3Index method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="indexing.html#gen3.index.Gen3Index.update_record">update_record() (gen3.index.Gen3Index method)</a>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.upload">upload() (gen3.wss.Gen3WsStorage method)</a>
+</li>
+      <li><a href="wss.html#gen3.wss.Gen3WsStorage.upload_url">upload_url() (gen3.wss.Gen3WsStorage method)</a>
 </li>
       <li><a href="tools/indexing.html#gen3.tools.indexing.index_manifest.URLS">URLS (in module gen3.tools.indexing.index_manifest)</a>
 </li>
@@ -395,29 +462,64 @@
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Gen3 SDK</a></h1>
 
-   <div class="relations">
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=uc-cdis&repo=gen3sdk-python&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="auth.html">Gen3 Auth Helper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">Gen3 File Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="indexing.html">Gen3 Index Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jobs.html">Gen3 Jobs Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Gen3 Metadata Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submission.html">Gen3 Submission Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Gen3 Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wss.html">Gen3 Workspace Storage</a></li>
+</ul>
+
+<div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
   </ul></li>
 </ul>
 </div>
-
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
