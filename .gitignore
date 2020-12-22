@@ -109,3 +109,7 @@ tests/resources/keys/*.pem
 
 # graphql schema
 schema.json
+
+# don't know what this is
+*.sq3
+merged-output-test-manifest.*

@@ -2,8 +2,8 @@ import click
 import os
 import gen3.cli.auth as auth
 import gen3.cli.pfb as pfb
+import gen3.cli.wss as wss
 import gen3
-
 
 
 class AuthFactory:
@@ -17,7 +17,7 @@ class AuthFactory:
             return self._cache
         self._cache = gen3.auth.Gen3Auth(refresh_file=self.refresh_file)
         return self._cache
-    
+
 
 @click.group()
 @click.option("--auth", 'auth_config', default=os.getenv("GEN3_API_KEY", None), help="path to api key, or shorthand for key in ~/.gen3/, or idp: identifier if in workspace")
@@ -32,5 +32,6 @@ def main(ctx=None, auth_config=None, endpoint=None):
 
 main.add_command(auth.auth)
 main.add_command(pfb.pfb)
+main.add_command(wss.wss)
 
 main()

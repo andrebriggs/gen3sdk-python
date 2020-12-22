@@ -1,6 +1,19 @@
 #!/bin/bash
 
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+
 #-- lib ------
+
+pipecheck() {
+  local it
+  for it in "$@"; do
+    if [[ "$it" -ne 0 ]]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 
 # 
 # Adapted from cloud-automation/gen3/lib/shunit.sh
@@ -22,21 +35,51 @@ because() {
   return 0
 }
 
+test-wss() {
+  gen3 wss ls | jq -e -r .; pipecheck "${PIPESTATUS[@]}"; because $? "wss ls seems to work"
+  local testFile="sdkSmokeTest$(date +%Y%m%d).txt"
+  (cat - <<EOM
+bla bla bla
+frickjack frickjack frickjack
+EOM
+  ) > "$XDG_RUNTIME_DIR/$testFile"
+  gen3 wss upload-url "ws:///@user/$testFile" | jq -e -r .Data > /dev/null; pipecheck "${PIPESTATUS[@]}"; because $? "wss upload-url should work"
+  gen3 wss download-url "ws:///@user/$testFile" | jq -e -r .Data > /dev/null; pipecheck "${PIPESTATUS[@]}"; because $? "wss download-url should work"
+  gen3 wss cp "$XDG_RUNTIME_DIR/$testFile" "ws:///@user/$testFile"; because $? "wss cp $testFile should work"
+  gen3 wss cp "ws:///@user/$testFile" "$XDG_RUNTIME_DIR/download_$testFile" && [[ -f "$XDG_RUNTIME_DIR/download_$testFile" ]]; because $? "wss cp $testFile download should work"
+  gen3 wss ls | jq --arg key "$testFile" -e -r '.Data.Objects | map(select(.WorkspaceKey==$key)) | .[]'; pipecheck "${PIPESTATUS[@]}"; because $? "wss ls finds $testFile"
+  gen3 wss rm "ws:///@user/$testFile" | jq -e -r .; pipecheck "${PIPESTATUS[@]}"; because $? "wss rm should cleanup $testFile"
+  gen3 wss ls | (! jq --arg key "$testFile" -e -r '.Data.Objects | map(select(.WorkspaceKey==$key)) | .[]'); because $? "wss ls should not find removed $testFile"
+}
 
-run() {
-    gen3 --auth qa-covid19 auth curl /user/user; because $? "auth curl /user/user works"
+test-auth() {
+  gen3 auth curl /user/user; because $? "auth curl /user/user works"
+  gen3 auth access-token | gen3 auth token-decode - | jq -e -r .; pipecheck "${PIPESTATUS[@]}"; because $? "auth access-token works"
+}
+
+test-all() {
+  test-auth
+  test-wss
 }
 
 
 help() {
     cat - <<EOM
 Run a series of non-destructive intractive tests against
-the gen3sdk cli.
+the gen3sdk cli.  Assumes either GEN3_API_KEY environment
+is set, or running in workspace environment, or
+~/.gen3/credentials.json exists.
 
 Use: bash smokeTest.sh run <auth flags>
 
 Ex:
-  bash smokeTest.sh --auth qa-covid19
+  bash smokeTest.sh run
+
+Commands:
+* help
+* test-all
+* test-auth
+* test-wss
 
 EOM
 }

@@ -10,6 +10,13 @@ from urllib.parse import urlparse
 class Gen3AuthError(Exception):
     pass
 
+class Gen3CurlError(Exception):
+    """ Custom exception for capturing backoff and retry"""
+    pass
+
+class Gen3CurlStatusError(Gen3CurlError):
+    """ Custom exception for status > 399"""
+    pass
 
 def decode_token(token_str):
     """
@@ -69,17 +76,22 @@ def get_wts_idps(namespace=os.getenv("NAMESPACE", "default")):
         raise Exception("non-200 status {} - {}".format(resp.status_code, resp.text))
     return resp.json()
 
-def get_access_token_from_wts(namespace=os.getenv("NAMESPACE", "default"), idp=None):
+def get_access_token_from_wts(namespace=os.getenv("NAMESPACE", "default"), idp="local"):
     """
     Try to fetch an access token for the given idp from the wts
-    in the given namespace
+    in the given namespace.  If idp is not set, then default to "local"
     """
     # attempt to get a token from the workspace-token-service
     auth_url = get_wts_endpoint(namespace) + "/token/"
-    if idp:
+    if idp and idp != "local":
         auth_url += "?idp={}".format(idp)
     resp = requests.get(auth_url)
     return _handle_access_token_response(resp, "token")
+
+def check_curl_status(res):
+    """Raise Gen3CurlError if status is not < 400"""
+    if res.status_code > 399:
+        raise Gen3CurlStatusError("Got status: " + str(res.status_code))
 
 
 class Gen3Auth(AuthBase):
@@ -91,18 +103,32 @@ class Gen3Auth(AuthBase):
 
     Args:
         refresh_file (str, opt): The file containing the downloaded JSON web token. Optional if working in a Gen3 Workspace.
-                Defaults to env["GEN3_API_KEY"] if refresh_token and idp not set.
+                Defaults to (env["GEN3_API_KEY"] || "credentials") if refresh_token and idp not set.
                 Includes ~/.gen3/ in search path if value does not include /.
                 Interprets "idp://wts/idp" as an idp
         refresh_token (str, opt): The JSON web token. Optional if working in a Gen3 Workspace.
-        idp (str, opt): If working in a Gen3 Workspace, the IDP to use can be specified.
+        idp (str, opt): If working in a Gen3 Workspace, the IDP to use can be specified - 
+                "local" indicates the local environment fence idp
 
     Examples:
         This generates the Gen3Auth class pointed at the sandbox commons while
-        using the credentials.json downloaded from the commons profile page.
+        using the credentials.json downloaded from the commons profile page
+        and installed in ~/.gen3/credentials.json
 
-        >>> auth = Gen3Auth(refresh_file="credentials.json")
+        >>> auth = Gen3Auth()
 
+        or use ~/.gen3/crdc.json:
+
+        >>> auth = Gen3Auth(refresh_file="crdc")
+
+        or use some arbitrary file:
+
+        >>> auth = Gen3Auth(refresh_file="./key.json")
+
+        or set the GEN3_API_KEY environment variable rather
+        than pass the refresh_file argument to the Gen3Auth 
+        constructor.
+        
         If working in a Gen3 Workspace, initialize as follows:
 
         >>> auth = Gen3Auth()
@@ -124,7 +150,7 @@ class Gen3Auth(AuthBase):
             )
 
         if not refresh_file and not refresh_token and not idp:
-            refresh_file = os.getenv("GEN3_API_KEY", None)
+            refresh_file = os.getenv("GEN3_API_KEY", "credentials")
 
         if refresh_file and not idp:
             idp_prefix = "idp://wts/"
@@ -135,7 +161,10 @@ class Gen3Auth(AuthBase):
                 refresh_file = "{}/.gen3/{}".format(os.path.expanduser("~"), refresh_file)
                 if not os.path.isfile(refresh_file) and refresh_file[-5:] != ".json":
                     refresh_file += ".json"
+                if not os.path.isfile(refresh_file):
+                    refresh_file = None
 
+        # at this point - refresh_file either exists or is None
         if not refresh_file and not refresh_token:
             # check if this is a Gen3 workspace environment
             # most production environments are in the "default" namespace
@@ -230,23 +259,26 @@ class Gen3Auth(AuthBase):
     
     def curl(self, path, request=None, data=None):
         """Get an access token suitable to pass as an Authorization header bearer"""
-        if not request:
-            request = "GET"
-            if data:
-                request = "POST"
-        json_data = data
-        output = None
-        if data and data[0] == "@":
-            with open(data[1:]) as f:
-                json_data = f.read()
-        if request == "GET":
-            output = requests.get(self.endpoint + "/" + path, auth=self)
-        elif request == "POST":
-            output = requests.post(self.endpoint + "/" + path, json=json_data, auth=self)
-        elif request == "PUT":
-            output = requests.put(self.endpoint + "/" + path, json=json_data, auth=self)
-        elif request == "DELETE":
-            output = requests.delete(self.endpoint + "/" + path, auth=self)
-        else:
-            raise Exception("Invalid request type: " + request)
-        return output
+        try:
+            if not request:
+                request = "GET"
+                if data:
+                    request = "POST"
+            json_data = data
+            output = None
+            if data and data[0] == "@":
+                with open(data[1:]) as f:
+                    json_data = f.read()
+            if request == "GET":
+                output = requests.get(self.endpoint + "/" + path, auth=self)
+            elif request == "POST":
+                output = requests.post(self.endpoint + "/" + path, json=json_data, auth=self)
+            elif request == "PUT":
+                output = requests.put(self.endpoint + "/" + path, json=json_data, auth=self)
+            elif request == "DELETE":
+                output = requests.delete(self.endpoint + "/" + path, auth=self)
+            else:
+                raise Exception("Invalid request type: " + request)
+            return output
+        except Exception as ex:
+            raise Gen3CurlError from ex
