@@ -1,43 +1,53 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gen3.auth &#8212; Gen3 SDK  documentation</title>
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head><body>
+  </head>
+  <body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for gen3.auth</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="kn">import</span> <span class="n">AuthBase</span>
+<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="k">import</span> <span class="n">AuthBase</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span>
 
 
 <span class="k">class</span> <span class="nc">Gen3AuthError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -127,6 +137,17 @@
         <span class="k">raise</span> <span class="n">Gen3CurlStatusError</span><span class="p">(</span><span class="s2">&quot;Got status: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
 
 
+<span class="k">def</span> <span class="nf">token_cache_file</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the path to the access-token cache file&quot;&quot;&quot;</span>
+    <span class="n">cache_folder</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/.cache/gen3/&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cache_folder</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cache_folder</span><span class="p">)</span>
+    
+    <span class="n">cache_prefix</span> <span class="o">=</span> <span class="n">cache_folder</span> <span class="o">+</span> <span class="s2">&quot;token_cache_&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">()</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cache_prefix</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
 <div class="viewcode-block" id="Gen3Auth"><a class="viewcode-back" href="../../auth.html#gen3.auth.Gen3Auth">[docs]</a><span class="k">class</span> <span class="nc">Gen3Auth</span><span class="p">(</span><span class="n">AuthBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gen3 auth helper class for use with requests auth.</span>
 
@@ -138,7 +159,8 @@
 <span class="sd">        refresh_file (str, opt): The file containing the downloaded JSON web token. Optional if working in a Gen3 Workspace.</span>
 <span class="sd">                Defaults to (env[&quot;GEN3_API_KEY&quot;] || &quot;credentials&quot;) if refresh_token and idp not set.</span>
 <span class="sd">                Includes ~/.gen3/ in search path if value does not include /.</span>
-<span class="sd">                Interprets &quot;idp://wts/idp&quot; as an idp</span>
+<span class="sd">                Interprets &quot;idp://wts/idp&quot; as an idp.</span>
+<span class="sd">                Interprets &quot;accesstoken:///token&quot; as an access token</span>
 <span class="sd">        refresh_token (str, opt): The JSON web token. Optional if working in a Gen3 Workspace.</span>
 <span class="sd">        idp (str, opt): If working in a Gen3 Workspace, the IDP to use can be specified - </span>
 <span class="sd">                &quot;local&quot; indicates the local environment fence idp</span>
@@ -167,13 +189,13 @@
 <span class="sd">        &gt;&gt;&gt; auth = Gen3Auth()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refresh_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refresh_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">idp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refresh_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refresh_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">idp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># note - this is not actually a JWT refresh token - it&#39;s a </span>
         <span class="c1">#  gen3 api key with a token as the &quot;api_key&quot; property</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span> <span class="o">=</span> <span class="n">refresh_token</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_wts_idp</span> <span class="o">=</span> <span class="n">idp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wts_idp</span> <span class="o">=</span> <span class="n">idp</span> <span class="ow">or</span> <span class="s2">&quot;local&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wts_namespace</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NAMESPACE&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_wts</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -187,8 +209,13 @@
 
         <span class="k">if</span> <span class="n">refresh_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">idp</span><span class="p">:</span>
             <span class="n">idp_prefix</span> <span class="o">=</span> <span class="s2">&quot;idp://wts/&quot;</span>
-            <span class="k">if</span> <span class="n">refresh_file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">idp_prefix</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">idp_prefix</span><span class="p">:</span>
+            <span class="n">access_token_prefix</span> <span class="o">=</span> <span class="s2">&quot;accesstoken:///&quot;</span>
+            <span class="k">if</span> <span class="n">refresh_file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">idp_prefix</span><span class="p">)]</span> <span class="o">==</span> <span class="n">idp_prefix</span><span class="p">:</span>
                 <span class="n">idp</span> <span class="o">=</span> <span class="n">refresh_file</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">idp_prefix</span><span class="p">):]</span>
+                <span class="n">refresh_file</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="n">refresh_file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">access_token_prefix</span><span class="p">)]</span> <span class="o">==</span> <span class="n">access_token_prefix</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="n">refresh_file</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">access_token_prefix</span><span class="p">):]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="n">decode_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
                 <span class="n">refresh_file</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">refresh_file</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;/&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refresh_file</span> <span class="ow">and</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">refresh_file</span><span class="p">:</span>
                 <span class="n">refresh_file</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/.gen3/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">),</span> <span class="n">refresh_file</span><span class="p">)</span>
@@ -197,31 +224,32 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">refresh_file</span><span class="p">):</span>
                     <span class="n">refresh_file</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># at this point - refresh_file either exists or is None</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">refresh_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh_token</span><span class="p">:</span>
-            <span class="c1"># check if this is a Gen3 workspace environment</span>
-            <span class="c1"># most production environments are in the &quot;default&quot; namespace</span>
-            <span class="c1"># attempt to get a token from the workspace-token-service</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="n">get_access_token_from_wts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wts_namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wts_idp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="n">decode_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_use_wts</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">refresh_file</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">refresh_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                    <span class="n">file_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">file_data</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Couldn&#39;t load your refresh token file: </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">refresh_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">:</span>
+            <span class="c1"># at this point - refresh_file either exists or is None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">refresh_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh_token</span><span class="p">:</span>
+                <span class="c1"># check if this is a Gen3 workspace environment</span>
+                <span class="c1"># most production environments are in the &quot;default&quot; namespace</span>
+                <span class="c1"># attempt to get a token from the workspace-token-service</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_wts</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># hate calling a method from the constructor, but avoids copying code</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_access_token</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">refresh_file</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">refresh_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">file_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">file_data</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Couldn&#39;t load your refresh token file: </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">refresh_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_wts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint_from_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint_from_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds authorization header to the request</span>
 
 <span class="sd">        This gets called by the python.requests package on outbound requests</span>
@@ -271,10 +299,31 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="n">get_access_token_with_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="n">decode_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
+        <span class="n">cache_file</span> <span class="o">=</span> <span class="n">token_cache_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wts_idp</span><span class="p">)</span>
+        <span class="c1"># write a temp file, then rename - to avoid </span>
+        <span class="c1"># simultaneous writes to same file race condition</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">cache_file</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;.tmp_eraseme_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">100000</span><span class="p">),</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">cache_file</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;failed to write token cache file: &quot;</span> <span class="o">+</span> <span class="n">cache_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span></div>
 
 <div class="viewcode-block" id="Gen3Auth.get_access_token"><a class="viewcode-back" href="../../auth.html#gen3.auth.Gen3Auth.get_access_token">[docs]</a>    <span class="k">def</span> <span class="nf">get_access_token</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Get the access token - auto refresh if within 5 minutes of expiration &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">:</span>
+            <span class="n">cache_file</span> <span class="o">=</span> <span class="n">token_cache_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_token</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wts_idp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">cache_file</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span> <span class="c1"># don&#39;t freak out on invalid cache</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cache_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="n">decode_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;ignoring invalid token cache: &quot;</span> <span class="o">+</span> <span class="n">cache_file</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">need_new_token</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span> <span class="ow">or</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mi">300</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_token_info</span><span class="p">[</span><span class="s2">&quot;exp&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">need_new_token</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_access_token</span><span class="p">()</span>
@@ -289,7 +338,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;bearer &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_access_token</span><span class="p">()</span>
-    
+
+
 <div class="viewcode-block" id="Gen3Auth.curl"><a class="viewcode-back" href="../../auth.html#gen3.auth.Gen3Auth.curl">[docs]</a>    <span class="k">def</span> <span class="nf">curl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">request</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get an access token suitable to pass as an Authorization header bearer&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -318,40 +368,10 @@
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">Gen3 SDK</a></h1>
-
-
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=uc-cdis&repo=gen3sdk-python&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-<h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../auth.html">Gen3 Auth Helper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../file.html">Gen3 File Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../indexing.html">Gen3 Index Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../jobs.html">Gen3 Jobs Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../metadata.html">Gen3 Metadata Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../submission.html">Gen3 Submission Class</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tools.html">Gen3 Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wss.html">Gen3 Workspace Storage</a></li>
-</ul>
-
-<div class="relations">
+        <div class="sphinxsidebarwrapper"><div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
@@ -361,23 +381,15 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
+  <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
