@@ -3,8 +3,10 @@ import hashlib
 import json
 from requests.auth import AuthBase
 import os
+import random
 import requests
 import time
+import logging
 from urllib.parse import urlparse
 
 
@@ -250,21 +252,29 @@ class Gen3Auth(AuthBase):
         else:
             self._access_token = get_access_token_with_key(self._refresh_token)
         self._access_token_info = decode_token(self._access_token)
-        cache_file = token_cache_file(self._refresh_token["api_key"] or self._wts_idp)
-        with open(cache_file, "w") as f:
-            f.write(self._access_token)
+        cache_file = token_cache_file(self._refresh_token and self._refresh_token["api_key"] or self._wts_idp)
+        # write a temp file, then rename - to avoid 
+        # simultaneous writes to same file race condition
+        temp = cache_file + (".tmp_eraseme_%d_%d" % (random.randrange(100000), time.time()))
+        try:
+            with open(temp, "w") as f:
+                f.write(self._access_token)
+            os.rename(temp, cache_file)
+        except:
+            logging.warning("failed to write token cache file: " + cache_file)
         return self._access_token
 
     def get_access_token(self):
         """ Get the access token - auto refresh if within 5 minutes of expiration """
         if not self._access_token:
-            cache_file = token_cache_file(self._refresh_token["api_key"] or self._wts_idp)
+            cache_file = token_cache_file(self._refresh_token and self._refresh_token["api_key"] or self._wts_idp)
             if os.path.isfile(cache_file):
                 try: # don't freak out on invalid cache
                     with open(cache_file) as f:
                         self._access_token = f.read()
                         self._access_token_info = decode_token(self._access_token)
                 except:
+                    logging.warning("ignoring invalid token cache: " + cache_file)
                     self._access_token = None
                     self._access_token_info = None
         need_new_token = not self._access_token or not self._access_token_info or time.time() + 300 > self._access_token_info["exp"]
