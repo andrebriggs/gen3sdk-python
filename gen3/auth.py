@@ -119,7 +119,8 @@ class Gen3Auth(AuthBase):
         refresh_file (str, opt): The file containing the downloaded JSON web token. Optional if working in a Gen3 Workspace.
                 Defaults to (env["GEN3_API_KEY"] || "credentials") if refresh_token and idp not set.
                 Includes ~/.gen3/ in search path if value does not include /.
-                Interprets "idp://wts/idp" as an idp
+                Interprets "idp://wts/idp" as an idp.
+                Interprets "accesstoken:///token" as an access token
         refresh_token (str, opt): The JSON web token. Optional if working in a Gen3 Workspace.
         idp (str, opt): If working in a Gen3 Workspace, the IDP to use can be specified - 
                 "local" indicates the local environment fence idp
@@ -168,8 +169,13 @@ class Gen3Auth(AuthBase):
 
         if refresh_file and not idp:
             idp_prefix = "idp://wts/"
-            if refresh_file[0:len(idp_prefix) - 1] == idp_prefix:
+            access_token_prefix = "accesstoken:///"
+            if refresh_file[0:len(idp_prefix)] == idp_prefix:
                 idp = refresh_file[len(idp_prefix):]
+                refresh_file = None
+            elif refresh_file[0:len(access_token_prefix)] == access_token_prefix:
+                self._access_token = refresh_file[len(access_token_prefix):]
+                self._access_token_info = decode_token(self._access_token)
                 refresh_file = None
             elif not os.path.isfile(refresh_file) and "/" not in refresh_file and "\\" not in refresh_file:
                 refresh_file = "{}/.gen3/{}".format(os.path.expanduser("~"), refresh_file)
@@ -178,26 +184,27 @@ class Gen3Auth(AuthBase):
                 if not os.path.isfile(refresh_file):
                     refresh_file = None
 
-        # at this point - refresh_file either exists or is None
-        if not refresh_file and not refresh_token:
-            # check if this is a Gen3 workspace environment
-            # most production environments are in the "default" namespace
-            # attempt to get a token from the workspace-token-service
-            self._use_wts = True
-            # hate calling a method from the constructor, but avoids copying code
-            self.get_access_token()
-        elif refresh_file:
-            try:
-                with open(refresh_file) as f:
-                    file_data = f.read()
-                self._refresh_token = json.loads(file_data)
-            except Exception as e:
-                raise ValueError(
-                    "Couldn't load your refresh token file: {}\n{}".format(
-                        refresh_file, str(e)
+        if not self._access_token:
+            # at this point - refresh_file either exists or is None
+            if not refresh_file and not refresh_token:
+                # check if this is a Gen3 workspace environment
+                # most production environments are in the "default" namespace
+                # attempt to get a token from the workspace-token-service
+                self._use_wts = True
+                # hate calling a method from the constructor, but avoids copying code
+                self.get_access_token()
+            elif refresh_file:
+                try:
+                    with open(refresh_file) as f:
+                        file_data = f.read()
+                    self._refresh_token = json.loads(file_data)
+                except Exception as e:
+                    raise ValueError(
+                        "Couldn't load your refresh token file: {}\n{}".format(
+                            refresh_file, str(e)
+                        )
                     )
-                )
-        if self._use_wts:
+        if self._access_token:
             self.endpoint = endpoint_from_token(self._access_token)
         else:
             self.endpoint = endpoint_from_token(self._refresh_token["api_key"])
