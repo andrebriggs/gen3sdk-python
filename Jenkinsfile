@@ -22,14 +22,6 @@ node {
     stage('FetchCode'){
       gitHelper.fetchAllRepos(pipeConfig['currentRepoName'])
     }
-    stage('SelectNamespace') {
-     if(!doNotRunTests) {
-        (kubectlNamespace, lock) = kubeHelper.selectAndLockNamespace(pipeConfig['UID'], namespaces)
-        kubeLocks << lock
-      } else {
-        Utils.markStageSkippedForConditional(STAGE_NAME)
-      }
-    }
     stage('CheckPRLabels') {
       // giving a chance for auto-label gh actions to catch up
       // sleep(10)
@@ -61,6 +53,14 @@ node {
       if (namespaces.isEmpty()) {
         println('populating namespaces with list of available namespaces...')
         namespaces = AVAILABLE_NAMESPACES
+      }
+    }
+    stage('SelectNamespace') {
+     if(!doNotRunTests) {
+        (kubectlNamespace, lock) = kubeHelper.selectAndLockNamespace(pipeConfig['UID'], namespaces)
+        kubeLocks << lock
+      } else {
+        Utils.markStageSkippedForConditional(STAGE_NAME)
       }
     }
     stage('K8sReset') {
