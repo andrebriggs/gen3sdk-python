@@ -83,7 +83,7 @@ node {
     stage('SmokeTest') {
       if(!doNotRunTests) {
         kubeHelper.kube(kubectlNamespace, {
-          sh 'export GEN3_API_KEY="accesstoken:///$(bash $GEN3_HOME/gen3/bin/api.sh access-token cdis.autotest@gmail.com)" && virtualenv "$WORKSPACE/virtenv" && source "$WORKSPACE/virtenv/bin/activate" && cd gen3sdk-python && poetry install -vv && poetry run bash tests/smokeTest.sh test-all'
+          sh 'export PATH="/var/jenkins_home/.local/bin:$PATH" && export GEN3_API_KEY="accesstoken:///$(bash $GEN3_HOME/gen3/bin/api.sh access-token cdis.autotest@gmail.com)" && virtualenv "$WORKSPACE/virtenv" && source "$WORKSPACE/virtenv/bin/activate" && cd gen3sdk-python && poetry install -vv && poetry run bash tests/smokeTest.sh test-all'
         })
       } else {
         Utils.markStageSkippedForConditional(STAGE_NAME)
