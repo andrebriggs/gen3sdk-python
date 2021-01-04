@@ -16,4 +16,4 @@ export GEN3_API_KEY="accesstoken:///$(gen3 api access-token cdis.autotest@gmail.
 virtualenv "$WORKSPACE/virtenv"
 source "$WORKSPACE/virtenv/bin/activate"
 poetry install -vv
-poetry run bash tests/smokeTest.sh test-all
+poetry run bash tmpGitClone/tests/smokeTest.sh test-all

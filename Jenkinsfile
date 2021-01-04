@@ -21,6 +21,7 @@ node {
     }
     stage('FetchCode'){
       gitHelper.fetchAllRepos(pipeConfig['currentRepoName'])
+      sh 'ls && test -f ./tmpGitClone/tests/jenkinsSmoke.sh'
     }
     stage('CheckPRLabels') {
       // giving a chance for auto-label gh actions to catch up
