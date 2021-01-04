@@ -84,7 +84,7 @@ node {
     stage('SmokeTest') {
       if(!doNotRunTests) {
         kubeHelper.kube(kubectlNamespace, {
-          sh 'bash tests/jenkinsSmoke.sh'
+          sh 'bash ./tmpGitClone/tests/jenkinsSmoke.sh'
         })
       } else {
         Utils.markStageSkippedForConditional(STAGE_NAME)
