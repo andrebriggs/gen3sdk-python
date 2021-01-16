@@ -469,17 +469,19 @@ def index_object_manifest(
         headers(list(str)): list of fieldnames
 
     """
-    logging.info("Start the process ...")
+    logging.info("\nStart the process ...\n")
     service_location = "index"
     commons_url = commons_url.strip("/")
     # if running locally, indexd is deployed by itself without a location relative
     # to the commons
     if "http://localhost" in commons_url:
-        service_location = ""
+        # service_location = ""
+        commons_url += "/" + service_location #+ "/" + service_location
 
-    if not commons_url.endswith(service_location):
-        commons_url += "/" + service_location
+    # if not commons_url.endswith(service_location):
+    #     commons_url += "/" + service_location
 
+    logging.info("\nUsing URL {}\n".format(commons_url))
     indexclient = client.IndexClient(commons_url, "v0", auth=auth)
 
     # if delimter not specified, try to get based on file ext

@@ -2,6 +2,7 @@ import json
 from requests.auth import AuthBase
 import os
 import requests
+import logging
 
 
 class Gen3AuthError(Exception):
@@ -146,6 +147,8 @@ class Gen3Auth(AuthBase):
                 auth_url = "{}/user/credentials/cdis/access_token".format(
                     self._endpoint
                 )
+                logging.info(f"\nAuth URL: {auth_url}\n")
+                # TODO: Add a retry here. Most of the time there is an internal error
                 resp = requests.post(auth_url, json=self._refresh_token)
                 err_msg = "Failed to get an access token from Fence at {}:\n{}"
                 token_key = "access_token"
@@ -155,8 +158,10 @@ class Gen3Auth(AuthBase):
                 json_resp = resp.json()
                 self._access_token = json_resp[token_key]
             except ValueError:  # cannot parse JSON
+                logging.info("ValueError")
                 raise Gen3AuthError(err_msg.format(auth_url, resp.text))
             except KeyError:  # no access_token in JSON response
+                logging.info("KeyError")
                 raise Gen3AuthError(err_msg.format(auth_url, json_resp))
 
         return "Bearer " + self._access_token

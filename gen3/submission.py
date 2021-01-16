@@ -3,6 +3,7 @@ import json
 import requests
 import pandas as pd
 import os
+import logging
 
 
 class Gen3Error(Exception):
@@ -198,6 +199,8 @@ class Gen3Submission:
 
         """
         api_url = "{}/api/v0/submission/{}/{}".format(self._endpoint, program, project)
+        logging.info("\nUsing the Sheepdog API URL {}\n".format(api_url))
+
         output = requests.put(api_url, auth=self._auth_provider, json=json)
         output.raise_for_status()
         return output.json()
